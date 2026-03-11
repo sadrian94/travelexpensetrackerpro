@@ -1,182 +1,303 @@
-<script type="module">
-    // 1. Import Firebase from the CDN
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Bill Splitter Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+        .glass-card { background: white; border: 1px solid #e2e8f0; }
+        .category-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; font-weight: 700; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
 
-    // 2. PASTE YOUR CONFIG HERE (From Step 1)
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_MESSAGING_ID",
-        appId: "YOUR_APP_ID"
-    };
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900">🌍 Travel Expense Tracker</h1>
+                <p class="text-slate-500">Log spending, track categories, and settle up.</p>
+            </div>
+            <button onclick="clearAll()" class="text-xs text-red-500 hover:underline">Clear All Data</button>
+        </header>
 
-    // 3. Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // App State
-    let people = [];
-    let expenses = [];
-
-    // UI Configuration
-    const categoryColors = {
-        'Food': 'bg-orange-100 text-orange-700', 'Transport': 'bg-blue-100 text-blue-700',
-        'Lodging': 'bg-purple-100 text-purple-700', 'Activities': 'bg-green-100 text-green-700',
-        'Shopping': 'bg-pink-100 text-pink-700', 'Other': 'bg-slate-100 text-slate-700'
-    };
-    const categoryIcons = { 'Food': '🍔', 'Transport': '🚗', 'Lodging': '🏨', 'Activities': '🎡', 'Shopping': '🛍️', 'Other': '📦' };
-
-    // 4. Real-time Listeners (This replaces reading from localStorage)
-    onSnapshot(collection(db, "people"), (snapshot) => {
-        people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        updateUI();
-    });
-
-    onSnapshot(query(collection(db, "expenses"), orderBy("timestamp", "desc")), (snapshot) => {
-        expenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        updateUI();
-    });
-
-    // 5. Database Functions (These replace writing to localStorage)
-    window.addPerson = async function () {
-        const input = document.getElementById('personName');
-        const name = input.value.trim();
-        if (name && !people.some(p => p.name === name)) {
-            await addDoc(collection(db, "people"), { name: name });
-            input.value = '';
-        }
-    }
-
-    window.removePerson = async function (id) {
-        await deleteDoc(doc(db, "people", id));
-    }
-
-    window.addExpense = async function () {
-        const desc = document.getElementById('expDesc').value;
-        const amount = parseFloat(document.getElementById('expAmount').value);
-        const category = document.getElementById('expCategory').value;
-        const payer = document.getElementById('expPayer').value;
-        const selectedPeople = Array.from(document.querySelectorAll('.split-member:checked')).map(cb => cb.value);
-
-        if (!desc || isNaN(amount) || !payer || selectedPeople.length === 0) {
-            alert("Please complete all fields.");
-            return;
-        }
-
-        await addDoc(collection(db, "expenses"), {
-            timestamp: Date.now(), // Firestore sorts better with numbers
-            displayTime: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-            desc,
-            amount,
-            category,
-            payer,
-            splitWith: selectedPeople
-        });
-
-        document.getElementById('expDesc').value = '';
-        document.getElementById('expAmount').value = '';
-    }
-
-    window.deleteExpense = async function (id) {
-        await deleteDoc(doc(db, "expenses", id));
-    }
-
-    // 6. UI Rendering (Mostly identical to your original code)
-    function updateUI() {
-        document.getElementById('peopleList').innerHTML = people.map(p => `
-            <li class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200">
-                <span class="font-medium">${p.name}</span>
-                <button onclick="removePerson('${p.id}')" class="text-slate-300 hover:text-red-500 transition">✕</button>
-            </li>
-        `).join('');
-
-        document.getElementById('expPayer').innerHTML = people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-        document.getElementById('splitCheckboxes').innerHTML = people.map(p => `
-            <label class="flex items-center gap-1 bg-white border px-2 py-1 rounded-md cursor-pointer text-sm">
-                <input type="checkbox" value="${p.name}" class="split-member h-4 w-4" checked> ${p.name}
-            </label>
-        `).join('');
-
-        const hList = document.getElementById('historyList');
-        if (expenses.length === 0) {
-            hList.innerHTML = `<div class="text-center p-8 border-2 border-dashed rounded-2xl text-slate-400">No expenses yet</div>`;
-        } else {
-            hList.innerHTML = expenses.map(e => `
-                <div class="glass-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-3 bg-white">
-                    <div class="flex gap-4 items-center">
-                        <div class="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full text-xl">
-                            ${categoryIcons[e.category] || '💰'}
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-slate-800">${e.desc}</span>
-                                <span class="category-badge ${categoryColors[e.category]}">${e.category}</span>
-                            </div>
-                            <div class="text-xs text-slate-400">
-                                ${e.displayTime} • Paid by <span class="font-semibold">${e.payer}</span>
-                            </div>
-                        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Setup & People (4 cols) -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="glass-card p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="text-blue-500">👥</span> Trip Group
+                    </h2>
+                    <div class="flex gap-2 mb-4">
+                        <input id="personName" type="text" placeholder="Add friend name..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button onclick="addPerson()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold">+</button>
                     </div>
-                    <div class="text-right flex items-center gap-4">
-                        <div>
-                            <div class="font-bold text-slate-900">$${e.amount.toFixed(2)}</div>
-                            <div class="text-[10px] text-slate-400 uppercase font-bold italic">Split ${e.splitWith.length} ways</div>
-                        </div>
-                        <button onclick="deleteExpense('${e.id}')" class="text-slate-300 hover:text-red-500 transition text-lg">🗑️</button>
+                    <ul id="peopleList" class="space-y-2"></ul>
+                </div>
+
+                <!-- Settlement Summary -->
+                <div class="glass-card p-6 rounded-2xl shadow-sm bg-blue-50 border-blue-100">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="text-blue-600">📊</span> Final Balances
+                    </h2>
+                    <div id="balanceContainer" class="space-y-3">
+                        <!-- Debt instructions go here -->
                     </div>
                 </div>
-            `).join('');
+            </div>
+
+            <!-- Right Column: Add Expense & History (8 cols) -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- Add Expense Form -->
+                <div class="glass-card p-6 rounded-2xl shadow-sm border-t-4 border-t-green-500">
+                    <h2 class="text-lg font-bold mb-4">💸 Add New Expense</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase">Description</label>
+                            <input id="expDesc" type="text" placeholder="e.g. Sushi Dinner" class="w-full px-3 py-2 border rounded-lg outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase">Amount ($)</label>
+                            <input id="expAmount" type="number" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase">Category</label>
+                            <select id="expCategory" class="w-full px-3 py-2 border rounded-lg outline-none bg-white">
+                                <option value="Food">🍔 Food & Drink</option>
+                                <option value="Transport">🚗 Transport</option>
+                                <option value="Lodging">🏨 Lodging</option>
+                                <option value="Activities">🎡 Activities</option>
+                                <option value="Shopping">🛍️ Shopping</option>
+                                <option value="Other">📦 Other</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase">Who Paid?</label>
+                            <select id="expPayer" class="w-full px-3 py-2 border rounded-lg outline-none bg-white"></select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase block mb-2">Split with whom?</label>
+                            <div id="splitCheckboxes" class="flex flex-wrap gap-2 p-3 border rounded-lg bg-slate-50">
+                                <!-- Group members -->
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="addExpense()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg">Log Expense</button>
+                </div>
+
+                <!-- History -->
+                <div>
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="text-slate-400">📜</span> Transaction History
+                    </h2>
+                    <div id="historyList" class="space-y-3"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 1. Import Firebase from the CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        // 2. PASTE YOUR CONFIG HERE (From Step 1)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwZM8-tdEvRE-uAxEpUHGnO6ct8RNo3ww",
+            authDomain: "travelexpensetrackerpro.firebaseapp.com",
+            projectId: "travelexpensetrackerpro",
+            storageBucket: "travelexpensetrackerpro.firebasestorage.app",
+            messagingSenderId: "739757943976",
+            appId: "1:739757943976:web:bcaede2d89fcc0be26669d",
+            measurementId: "G-33GF1NP37D"
+        };
+
+        // 3. Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // App State
+        let people = [];
+        let expenses = [];
+
+        // UI Configuration
+        const categoryColors = {
+            'Food': 'bg-orange-100 text-orange-700', 'Transport': 'bg-blue-100 text-blue-700',
+            'Lodging': 'bg-purple-100 text-purple-700', 'Activities': 'bg-green-100 text-green-700',
+            'Shopping': 'bg-pink-100 text-pink-700', 'Other': 'bg-slate-100 text-slate-700'
+        };
+        const categoryIcons = { 'Food': '🍔', 'Transport': '🚗', 'Lodging': '🏨', 'Activities': '🎡', 'Shopping': '🛍️', 'Other': '📦' };
+
+        // 4. Real-time Listeners (This replaces reading from localStorage)
+        onSnapshot(collection(db, "people"), (snapshot) => {
+            people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateUI();
+        });
+
+        onSnapshot(query(collection(db, "expenses"), orderBy("timestamp", "desc")), (snapshot) => {
+            expenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateUI();
+        });
+
+        // 5. Database Functions (These replace writing to localStorage)
+        window.addPerson = async function() {
+            const input = document.getElementById('personName');
+            const name = input.value.trim();
+            if (name && !people.some(p => p.name === name)) {
+                await addDoc(collection(db, "people"), { name: name });
+                input.value = '';
+            }
         }
-        calculateBalances();
-    }
 
-    function calculateBalances() {
-        const container = document.getElementById('balanceContainer');
-        if (people.length === 0) {
-            container.innerHTML = `<p class="text-slate-400 text-sm italic">Add group members to start.</p>`;
-            return;
+        window.removePerson = async function(id) {
+            await deleteDoc(doc(db, "people", id));
         }
 
-        let balances = {};
-        people.forEach(p => balances[p.name] = 0);
+        window.addExpense = async function() {
+            const desc = document.getElementById('expDesc').value;
+            const amount = parseFloat(document.getElementById('expAmount').value);
+            const category = document.getElementById('expCategory').value;
+            const payer = document.getElementById('expPayer').value;
+            const selectedPeople = Array.from(document.querySelectorAll('.split-member:checked')).map(cb => cb.value);
 
-        expenses.forEach(exp => {
-            // Check if payer exists in current people list
-            if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
+            if (!desc || isNaN(amount) || !payer || selectedPeople.length === 0) {
+                alert("Please complete all fields.");
+                return;
+            }
 
-            const share = exp.amount / exp.splitWith.length;
-            exp.splitWith.forEach(p => {
-                if (balances[p] !== undefined) balances[p] -= share;
+            await addDoc(collection(db, "expenses"), {
+                timestamp: Date.now(), // Firestore sorts better with numbers
+                displayTime: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                desc,
+                amount,
+                category,
+                payer,
+                splitWith: selectedPeople
             });
-        });
 
-        let debtors = [];
-        let creditors = [];
-        for (let person in balances) {
-            if (balances[person] < -0.01) debtors.push({ name: person, amt: Math.abs(balances[person]) });
-            else if (balances[person] > 0.01) creditors.push({ name: person, amt: balances[person] });
+            document.getElementById('expDesc').value = '';
+            document.getElementById('expAmount').value = '';
         }
 
-        let instructions = [];
-        let dIdx = 0, cIdx = 0;
-        while (dIdx < debtors.length && cIdx < creditors.length) {
-            let d = debtors[dIdx], c = creditors[cIdx];
-            let settle = Math.min(d.amt, c.amt);
-            instructions.push(`<strong>${d.name}</strong> owes <strong>${c.name}</strong> <span class="text-blue-600 font-bold">$${settle.toFixed(2)}</span>`);
-            d.amt -= settle; c.amt -= settle;
-            if (d.amt <= 0.01) dIdx++;
-            if (c.amt <= 0.01) cIdx++;
+        window.deleteExpense = async function(id) {
+            await deleteDoc(doc(db, "expenses", id));
         }
 
-        container.innerHTML = instructions.length === 0
-            ? `<p class="text-slate-500 text-sm">Everyone is even! 🎉</p>`
-            : instructions.map(ins => `
-                <div class="bg-white p-3 mb-2 rounded-lg border border-blue-100 shadow-sm text-sm">
-                    ${ins}
-                </div>
+        window.clearAll = async function() {
+            if(confirm("Are you sure? This will delete all trip data.")) {
+                for (const p of people) {
+                    await deleteDoc(doc(db, "people", p.id));
+                }
+                for (const e of expenses) {
+                    await deleteDoc(doc(db, "expenses", e.id));
+                }
+            }
+        }
+
+        // 6. UI Rendering (Mostly identical to your original code)
+        function updateUI() {
+            document.getElementById('peopleList').innerHTML = people.map(p => `
+                <li class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200">
+                    <span class="font-medium">${p.name}</span>
+                    <button onclick="removePerson('${p.id}')" class="text-slate-300 hover:text-red-500 transition">✕</button>
+                </li>
             `).join('');
-    }
-</script>
+
+            document.getElementById('expPayer').innerHTML = people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+            document.getElementById('splitCheckboxes').innerHTML = people.map(p => `
+                <label class="flex items-center gap-1 bg-white border px-2 py-1 rounded-md cursor-pointer text-sm">
+                    <input type="checkbox" value="${p.name}" class="split-member h-4 w-4" checked> ${p.name}
+                </label>
+            `).join('');
+
+            const hList = document.getElementById('historyList');
+            if (expenses.length === 0) {
+                hList.innerHTML = `<div class="text-center p-8 border-2 border-dashed rounded-2xl text-slate-400">No expenses yet</div>`;
+            } else {
+                hList.innerHTML = expenses.map(e => `
+                    <div class="glass-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-3 bg-white">
+                        <div class="flex gap-4 items-center">
+                            <div class="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full text-xl">
+                                ${categoryIcons[e.category] || '💰'}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-800">${e.desc}</span>
+                                    <span class="category-badge ${categoryColors[e.category]}">${e.category}</span>
+                                </div>
+                                <div class="text-xs text-slate-400">
+                                    ${e.displayTime} • Paid by <span class="font-semibold">${e.payer}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right flex items-center gap-4">
+                            <div>
+                                <div class="font-bold text-slate-900">$${e.amount.toFixed(2)}</div>
+                                <div class="text-[10px] text-slate-400 uppercase font-bold italic">Split ${e.splitWith.length} ways</div>
+                            </div>
+                            <button onclick="deleteExpense('${e.id}')" class="text-slate-300 hover:text-red-500 transition text-lg">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            calculateBalances();
+        }
+
+        function calculateBalances() {
+            const container = document.getElementById('balanceContainer');
+            if (people.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-sm italic">Add group members to start.</p>`;
+                return;
+            }
+
+            let balances = {};
+            people.forEach(p => balances[p.name] = 0);
+
+            expenses.forEach(exp => {
+                // Check if payer exists in current people list
+                if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
+                
+                const share = exp.amount / exp.splitWith.length;
+                exp.splitWith.forEach(p => {
+                    if (balances[p] !== undefined) balances[p] -= share;
+                });
+            });
+
+            let debtors = [];
+            let creditors = [];
+            for (let person in balances) {
+                if (balances[person] < -0.01) debtors.push({ name: person, amt: Math.abs(balances[person]) });
+                else if (balances[person] > 0.01) creditors.push({ name: person, amt: balances[person] });
+            }
+
+            let instructions = [];
+            let dIdx = 0, cIdx = 0;
+            while (dIdx < debtors.length && cIdx < creditors.length) {
+                let d = debtors[dIdx], c = creditors[cIdx];
+                let settle = Math.min(d.amt, c.amt);
+                instructions.push(`<strong>${d.name}</strong> owes <strong>${c.name}</strong> <span class="text-blue-600 font-bold">$${settle.toFixed(2)}</span>`);
+                d.amt -= settle; c.amt -= settle;
+                if (d.amt <= 0.01) dIdx++;
+                if (c.amt <= 0.01) cIdx++;
+            }
+
+            container.innerHTML = instructions.length === 0 
+                ? `<p class="text-slate-500 text-sm">Everyone is even! 🎉</p>`
+                : instructions.map(ins => `
+                    <div class="bg-white p-3 mb-2 rounded-lg border border-blue-100 shadow-sm text-sm">
+                        ${ins}
+                    </div>
+                `).join('');
+        }
+    </script>
+</body>
+</html>
