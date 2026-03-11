@@ -74,6 +74,8 @@
                     <div id="syncStatus" class="sync-indicator text-slate-400">
                         <div class="sync-dot"></div> <span id="syncText">Connected</span>
                     </div>
+                    <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-mono"
+                        id="displayTripId">ID: ...</span>
                 </div>
             </div>
             <div class="flex items-center gap-4">
@@ -84,6 +86,10 @@
                 <button onclick="startNewTrip()"
                     class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-sm shadow-sm transition">
                     ✨ New Trip
+                </button>
+                <button onclick="joinTrip()"
+                    class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-sm shadow-sm transition">
+                    📂 Join Trip
                 </button>
                 <button onclick="clearAll()" class="text-xs text-red-500 hover:underline transition">Clear Trip
                     Data</button>
@@ -237,6 +243,10 @@
             localStorage.setItem('lastTripIdV2', tripId);
             saveToRecentTrips(tripId);
             updateRecentTripsUI();
+
+            // Display ID in UI
+            const displayEl = document.getElementById('displayTripId');
+            if (displayEl) displayEl.innerText = `ID: ${tripId}`;
         }
 
         function saveToRecentTrips(id) {
@@ -279,6 +289,14 @@
             if (confirm("Switch to a clean new trip? Your current trip link will still work!")) {
                 const newId = 'trip-' + Math.random().toString(36).substr(2, 9);
                 window.location.hash = newId;
+                location.reload();
+            }
+        }
+
+        window.joinTrip = function () {
+            const id = prompt("Enter the Trip ID you want to join (found at the end of the URL):");
+            if (id && id.trim()) {
+                window.location.hash = id.trim();
                 location.reload();
             }
         }
