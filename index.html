@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,60 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
-        .glass-card { background: white; border: 1px solid #e2e8f0; }
-        .category-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; font-weight: 700; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .glass-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .category-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .sync-indicator {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+        }
+
+        .syncing .sync-dot {
+            animation: pulse 1.5s infinite;
+            background-color: #3b82f6;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
+
 <body class="p-4 md:p-8">
 
     <div class="max-w-5xl mx-auto">
@@ -19,13 +69,24 @@
         <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900">🌍 Travel Expense Tracker</h1>
-                <p class="text-slate-500">Log spending, track categories, and settle up.</p>
+                <div class="flex items-center gap-3">
+                    <p class="text-slate-500">Log spending, track categories, and settle up.</p>
+                    <div id="syncStatus" class="sync-indicator text-slate-400">
+                        <div class="sync-dot"></div> <span id="syncText">Connected</span>
+                    </div>
+                </div>
             </div>
-            <button onclick="clearAll()" class="text-xs text-red-500 hover:underline">Clear All Data</button>
+            <div class="flex items-center gap-4">
+                <button onclick="copyShareLink()"
+                    class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-black font-bold text-sm flex items-center gap-2 shadow-sm">
+                    🔗 Share Trip
+                </button>
+                <button onclick="clearAll()" class="text-xs text-red-500 hover:underline">Clear All Data</button>
+            </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             <!-- Left Column: Setup & People (4 cols) -->
             <div class="lg:col-span-4 space-y-6">
                 <div class="glass-card p-6 rounded-2xl shadow-sm">
@@ -33,8 +94,10 @@
                         <span class="text-blue-500">👥</span> Trip Group
                     </h2>
                     <div class="flex gap-2 mb-4">
-                        <input id="personName" type="text" placeholder="Add friend name..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                        <button onclick="addPerson()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold">+</button>
+                        <input id="personName" type="text" placeholder="Add friend name..."
+                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button onclick="addPerson()"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold">+</button>
                     </div>
                     <ul id="peopleList" class="space-y-2"></ul>
                 </div>
@@ -52,20 +115,22 @@
 
             <!-- Right Column: Add Expense & History (8 cols) -->
             <div class="lg:col-span-8 space-y-6">
-                
+
                 <!-- Add Expense Form -->
                 <div class="glass-card p-6 rounded-2xl shadow-sm border-t-4 border-t-green-500">
                     <h2 class="text-lg font-bold mb-4">💸 Add New Expense</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="text-xs font-bold text-slate-500 uppercase">Description</label>
-                            <input id="expDesc" type="text" placeholder="e.g. Sushi Dinner" class="w-full px-3 py-2 border rounded-lg outline-none">
+                            <input id="expDesc" type="text" placeholder="e.g. Sushi Dinner"
+                                class="w-full px-3 py-2 border rounded-lg outline-none">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-slate-500 uppercase">Amount ($)</label>
-                            <input id="expAmount" type="number" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg outline-none">
+                            <input id="expAmount" type="number" placeholder="0.00"
+                                class="w-full px-3 py-2 border rounded-lg outline-none">
                         </div>
-                        
+
                         <div>
                             <label class="text-xs font-bold text-slate-500 uppercase">Category</label>
                             <select id="expCategory" class="w-full px-3 py-2 border rounded-lg outline-none bg-white">
@@ -80,17 +145,21 @@
 
                         <div>
                             <label class="text-xs font-bold text-slate-500 uppercase">Who Paid?</label>
-                            <select id="expPayer" class="w-full px-3 py-2 border rounded-lg outline-none bg-white"></select>
+                            <select id="expPayer"
+                                class="w-full px-3 py-2 border rounded-lg outline-none bg-white"></select>
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label class="text-xs font-bold text-slate-500 uppercase block mb-2">Split with whom?</label>
+                            <label class="text-xs font-bold text-slate-500 uppercase block mb-2">Split with
+                                whom?</label>
                             <div id="splitCheckboxes" class="flex flex-wrap gap-2 p-3 border rounded-lg bg-slate-50">
                                 <!-- Group members -->
                             </div>
                         </div>
                     </div>
-                    <button onclick="addExpense()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg">Log Expense</button>
+                    <button onclick="addExpense()"
+                        class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg">Log
+                        Expense</button>
                 </div>
 
                 <!-- History -->
@@ -105,10 +174,146 @@
         </div>
     </div>
 
-    <script>
-        let people = JSON.parse(localStorage.getItem('tripPeopleV2')) || [];
-        let expenses = JSON.parse(localStorage.getItem('tripExpensesV2')) || [];
+    <!-- Firebase SDK Implementation -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-aGIZFJEcZva-t0xcmAtp63v_EJFp7fA",
+            authDomain: "travelexpensetrackerdatabase.firebaseapp.com",
+            databaseURL: "https://travelexpensetrackerdatabase-default-rtdb.firebaseio.com",
+            projectId: "travelexpensetrackerdatabase",
+            storageBucket: "travelexpensetrackerdatabase.firebasestorage.app",
+            messagingSenderId: "223838111482",
+            appId: "1:223838111482:web:ff93cab2096be9ea64ab43",
+            measurementId: "G-7RMJZSL29D"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- Data & State Management ---
+        let people = [];
+        let expenses = [];
+        let tripId = window.location.hash.substring(1);
+
+        // Generate a new Trip ID if none exists
+        if (!tripId) {
+            tripId = 'trip-' + Math.random().toString(36).substr(2, 9);
+            window.location.hash = tripId;
+        }
+
+        const tripRef = ref(db, 'trips/' + tripId);
+
+        // Indicators
+        const setSyncing = (isSyncing) => {
+            const el = document.getElementById('syncStatus');
+            const txt = document.getElementById('syncText');
+            if (isSyncing) {
+                el.classList.add('syncing');
+                txt.innerText = 'Syncing...';
+            } else {
+                el.classList.remove('syncing');
+                txt.innerText = 'Connected';
+            }
+        };
+
+        // --- Real-time Sync ---
+        onValue(tripRef, (snapshot) => {
+            const data = snapshot.val() || {};
+            people = data.people || [];
+
+            const rawExpenses = data.expenses || {};
+            expenses = Object.keys(rawExpenses).map(key => ({
+                ...rawExpenses[key],
+                firebaseKey: key
+            }));
+
+            expenses.sort((a, b) => a.id - b.id);
+            updateUI();
+            setSyncing(false);
+        });
+
+        // --- Global Functions ---
+        window.addPerson = function () {
+            const input = document.getElementById('personName');
+            const name = input.value.trim();
+            if (name && !people.includes(name)) {
+                setSyncing(true);
+                people.push(name);
+                set(ref(db, 'trips/' + tripId + '/people'), people);
+                input.value = '';
+            }
+        };
+
+        window.removePerson = function (name) {
+            if (confirm(`Remove ${name} and all their linked expenses?`)) {
+                setSyncing(true);
+                const updatedPeople = people.filter(p => p !== name);
+                set(ref(db, 'trips/' + tripId + '/people'), updatedPeople);
+
+                expenses.forEach(e => {
+                    if (e.payer === name) {
+                        remove(ref(db, 'trips/' + tripId + '/expenses/' + e.firebaseKey));
+                    }
+                });
+            }
+        };
+
+        window.addExpense = function () {
+            const desc = document.getElementById('expDesc').value;
+            const amount = parseFloat(document.getElementById('expAmount').value);
+            const category = document.getElementById('expCategory').value;
+            const payer = document.getElementById('expPayer').value;
+
+            const selectedPeople = Array.from(document.querySelectorAll('.split-member:checked'))
+                .map(cb => cb.value);
+
+            if (!desc || isNaN(amount) || !payer || selectedPeople.length === 0) {
+                alert("Please complete all fields.");
+                return;
+            }
+
+            setSyncing(true);
+            const expense = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                desc,
+                amount,
+                category,
+                payer,
+                splitWith: selectedPeople
+            };
+
+            push(ref(db, 'trips/' + tripId + '/expenses'), expense);
+
+            document.getElementById('expDesc').value = '';
+            document.getElementById('expAmount').value = '';
+        };
+
+        window.deleteExpense = function (firebaseKey) {
+            setSyncing(true);
+            remove(ref(db, 'trips/' + tripId + '/expenses/' + firebaseKey));
+        };
+
+        window.clearAll = function () {
+            if (confirm("Are you sure? This will delete all trip data for this Link.")) {
+                setSyncing(true);
+                remove(tripRef);
+            }
+        };
+
+        window.copyShareLink = function () {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert("Link copied to clipboard! Share this URL with your friends to collaborate.");
+            });
+        };
+
+        // --- UI Rendering ---
         const categoryColors = {
             'Food': 'bg-orange-100 text-orange-700',
             'Transport': 'bg-blue-100 text-blue-700',
@@ -122,75 +327,7 @@
             'Food': '🍔', 'Transport': '🚗', 'Lodging': '🏨', 'Activities': '🎡', 'Shopping': '🛍️', 'Other': '📦'
         };
 
-        updateUI();
-
-        function addPerson() {
-            const input = document.getElementById('personName');
-            const name = input.value.trim();
-            if (name && !people.includes(name)) {
-                people.push(name);
-                input.value = '';
-                saveAndRefresh();
-            }
-        }
-
-        function removePerson(name) {
-            people = people.filter(p => p !== name);
-            expenses = expenses.filter(e => e.payer !== name);
-            saveAndRefresh();
-        }
-
-        function addExpense() {
-            const desc = document.getElementById('expDesc').value;
-            const amount = parseFloat(document.getElementById('expAmount').value);
-            const category = document.getElementById('expCategory').value;
-            const payer = document.getElementById('expPayer').value;
-            
-            const selectedPeople = Array.from(document.querySelectorAll('.split-member:checked'))
-                                        .map(cb => cb.value);
-
-            if (!desc || isNaN(amount) || !payer || selectedPeople.length === 0) {
-                alert("Please complete all fields.");
-                return;
-            }
-
-            const expense = {
-                id: Date.now(),
-                timestamp: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                desc,
-                amount,
-                category,
-                payer,
-                splitWith: selectedPeople
-            };
-
-            expenses.push(expense);
-            document.getElementById('expDesc').value = '';
-            document.getElementById('expAmount').value = '';
-            saveAndRefresh();
-        }
-
-        function deleteExpense(id) {
-            expenses = expenses.filter(e => e.id !== id);
-            saveAndRefresh();
-        }
-
-        function clearAll() {
-            if(confirm("Are you sure? This will delete all trip data.")) {
-                people = [];
-                expenses = [];
-                saveAndRefresh();
-            }
-        }
-
-        function saveAndRefresh() {
-            localStorage.setItem('tripPeopleV2', JSON.stringify(people));
-            localStorage.setItem('tripExpensesV2', JSON.stringify(expenses));
-            updateUI();
-        }
-
         function updateUI() {
-            // Update People
             document.getElementById('peopleList').innerHTML = people.map(p => `
                 <li class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200">
                     <span class="font-medium">${p}</span>
@@ -198,7 +335,6 @@
                 </li>
             `).join('');
 
-            // Update Controls
             document.getElementById('expPayer').innerHTML = people.map(p => `<option value="${p}">${p}</option>`).join('');
             document.getElementById('splitCheckboxes').innerHTML = people.map(p => `
                 <label class="flex items-center gap-1 bg-white border px-2 py-1 rounded-md cursor-pointer text-sm">
@@ -206,12 +342,11 @@
                 </label>
             `).join('');
 
-            // Update History
             const hList = document.getElementById('historyList');
             if (expenses.length === 0) {
                 hList.innerHTML = `<div class="text-center p-8 border-2 border-dashed rounded-2xl text-slate-400">No expenses yet</div>`;
             } else {
-                hList.innerHTML = expenses.slice().reverse().map(e => `
+                hList.innerHTML = expenses.slice().sort((a, b) => b.id - a.id).map(e => `
                     <div class="glass-card p-4 rounded-xl flex justify-between items-center shadow-sm">
                         <div class="flex gap-4 items-center">
                             <div class="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full text-xl">
@@ -232,7 +367,7 @@
                                 <div class="font-bold text-slate-900">$${e.amount.toFixed(2)}</div>
                                 <div class="text-[10px] text-slate-400 uppercase font-bold italic">Split ${e.splitWith.length} ways</div>
                             </div>
-                            <button onclick="deleteExpense(${e.id})" class="text-slate-300 hover:text-red-500 transition text-lg">🗑️</button>
+                            <button onclick="deleteExpense('${e.firebaseKey}')" class="text-slate-300 hover:text-red-500 transition text-lg">🗑️</button>
                         </div>
                     </div>
                 `).join('');
@@ -277,7 +412,7 @@
                 if (c.amt <= 0.01) cIdx++;
             }
 
-            container.innerHTML = instructions.length === 0 
+            container.innerHTML = instructions.length === 0
                 ? `<p class="text-slate-500 text-sm">Everyone is even! 🎉</p>`
                 : instructions.map(ins => `
                     <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm text-sm">
@@ -287,4 +422,5 @@
         }
     </script>
 </body>
+
 </html>
