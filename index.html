@@ -81,8 +81,16 @@
                     class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-black font-bold text-sm flex items-center gap-2 shadow-sm">
                     🔗 Share Trip
                 </button>
-                <button onclick="clearAll()" class="text-xs text-red-500 hover:underline">Clear All Data</button>
+                <button onclick="startNewTrip()"
+                    class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-sm shadow-sm transition">
+                    ✨ New Trip
+                </button>
+                <button onclick="clearAll()" class="text-xs text-red-500 hover:underline transition">Clear Trip
+                    Data</button>
             </div>
+            <p class="text-[10px] text-slate-400 mt-2 md:text-right italic">
+                💡 Tip: This URL is your "Key". Bookmark it or share it with friends to see the same data on any device!
+            </p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -100,6 +108,16 @@
                             class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold">+</button>
                     </div>
                     <ul id="peopleList" class="space-y-2"></ul>
+                </div>
+
+                <!-- Recent Trips -->
+                <div id="recentTripsContainer" class="glass-card p-6 rounded-2xl shadow-sm hidden">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="text-orange-500">⏱️</span> Recent Trips
+                    </h2>
+                    <ul id="recentTripsList" class="space-y-2 text-sm text-slate-600">
+                        <!-- Recent trips go here -->
+                    </ul>
                 </div>
 
                 <!-- Settlement Summary -->
@@ -200,11 +218,72 @@
         let expenses = [];
         let tripId = window.location.hash.substring(1);
 
-        // Generate a new Trip ID if none exists
-        if (!tripId) {
-            tripId = 'trip-' + Math.random().toString(36).substr(2, 9);
-            window.location.hash = tripId;
+        // --- Trip Persistence & Recovery ---
+        function initTrip() {
+            if (!tripId) {
+                // Try to recover last trip from localStorage
+                const lastTrip = localStorage.getItem('lastTripIdV2');
+                if (lastTrip) {
+                    tripId = lastTrip;
+                    window.location.hash = tripId;
+                } else {
+                    // Generate new if totally fresh
+                    tripId = 'trip-' + Math.random().toString(36).substr(2, 9);
+                    window.location.hash = tripId;
+                }
+            }
+
+            // Save to persistence
+            localStorage.setItem('lastTripIdV2', tripId);
+            saveToRecentTrips(tripId);
+            updateRecentTripsUI();
         }
+
+        function saveToRecentTrips(id) {
+            let recents = JSON.parse(localStorage.getItem('recentTripsV2') || '[]');
+            // Move to top or add
+            recents = recents.filter(t => t !== id);
+            recents.unshift(id);
+            // Cap at 5
+            localStorage.setItem('recentTripsV2', JSON.stringify(recents.slice(0, 5)));
+        }
+
+        window.updateRecentTripsUI = function () {
+            const recents = JSON.parse(localStorage.getItem('recentTripsV2') || '[]');
+            const container = document.getElementById('recentTripsContainer');
+            const list = document.getElementById('recentTripsList');
+
+            if (recents.length > 1) { // Only show if there's more than one trip
+                container.classList.remove('hidden');
+                list.innerHTML = recents.map(id => `
+                    <li class="flex justify-between items-center group">
+                        <a href="#${id}" onclick="setTimeout(() => location.reload(), 10)" class="truncate hover:text-blue-600 ${id === tripId ? 'font-bold text-blue-600' : ''}">
+                            ${id === tripId ? '👉 ' : ''}${id}
+                        </a>
+                        ${id !== tripId ? `<button onclick="removeFromHistory('${id}')" class="text-slate-200 group-hover:text-red-400">✕</button>` : ''}
+                    </li>
+                `).join('');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        window.removeFromHistory = function (id) {
+            let recents = JSON.parse(localStorage.getItem('recentTripsV2') || '[]');
+            recents = recents.filter(t => t !== id);
+            localStorage.setItem('recentTripsV2', JSON.stringify(recents));
+            updateRecentTripsUI();
+        }
+
+        window.startNewTrip = function () {
+            if (confirm("Switch to a clean new trip? Your current trip link will still work!")) {
+                const newId = 'trip-' + Math.random().toString(36).substr(2, 9);
+                window.location.hash = newId;
+                location.reload();
+            }
+        }
+
+        initTrip();
 
         const tripRef = ref(db, 'trips/' + tripId);
 
