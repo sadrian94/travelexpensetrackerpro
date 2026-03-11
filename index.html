@@ -105,9 +105,30 @@
         </div>
     </div>
 
-    <script>
-        let people = JSON.parse(localStorage.getItem('tripPeopleV2')) || [];
-        let expenses = JSON.parse(localStorage.getItem('tripExpensesV2')) || [];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwZM8-tdEvRE-uAxEpUHGnO6ct8RNo3ww",
+          authDomain: "travelexpensetrackerpro.firebaseapp.com",
+          projectId: "travelexpensetrackerpro",
+          storageBucket: "travelexpensetrackerpro.firebasestorage.app",
+          messagingSenderId: "739757943976",
+          appId: "1:739757943976:web:bcaede2d89fcc0be26669d",
+          measurementId: "G-33GF1NP37D"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // We use a single document for the app to act exactly like localStorage for now
+        const dbDocRef = doc(db, 'tracker', 'tripData');
+
+        let people = [];
+        let expenses = [];
 
         const categoryColors = {
             'Food': 'bg-orange-100 text-orange-700',
@@ -122,25 +143,38 @@
             'Food': '🍔', 'Transport': '🚗', 'Lodging': '🏨', 'Activities': '🎡', 'Shopping': '🛍️', 'Other': '📦'
         };
 
-        updateUI();
+        // Real-time listener for Firestore data
+        onSnapshot(dbDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                people = data.people || [];
+                expenses = data.expenses || [];
+            }
+            updateUI();
+        });
 
-        function addPerson() {
+        async function saveToFirebase() {
+            await setDoc(dbDocRef, { people, expenses }, { merge: true });
+        }
+
+        // Attach functions to window to be accessible by inline onclick events
+        window.addPerson = async function() {
             const input = document.getElementById('personName');
             const name = input.value.trim();
             if (name && !people.includes(name)) {
                 people.push(name);
                 input.value = '';
-                saveAndRefresh();
+                await saveToFirebase();
             }
         }
 
-        function removePerson(name) {
+        window.removePerson = async function(name) {
             people = people.filter(p => p !== name);
             expenses = expenses.filter(e => e.payer !== name);
-            saveAndRefresh();
+            await saveToFirebase();
         }
 
-        function addExpense() {
+        window.addExpense = async function() {
             const desc = document.getElementById('expDesc').value;
             const amount = parseFloat(document.getElementById('expAmount').value);
             const category = document.getElementById('expCategory').value;
@@ -167,26 +201,20 @@
             expenses.push(expense);
             document.getElementById('expDesc').value = '';
             document.getElementById('expAmount').value = '';
-            saveAndRefresh();
+            await saveToFirebase();
         }
 
-        function deleteExpense(id) {
+        window.deleteExpense = async function(id) {
             expenses = expenses.filter(e => e.id !== id);
-            saveAndRefresh();
+            await saveToFirebase();
         }
 
-        function clearAll() {
+        window.clearAll = async function() {
             if(confirm("Are you sure? This will delete all trip data.")) {
                 people = [];
                 expenses = [];
-                saveAndRefresh();
+                await saveToFirebase();
             }
-        }
-
-        function saveAndRefresh() {
-            localStorage.setItem('tripPeopleV2', JSON.stringify(people));
-            localStorage.setItem('tripExpensesV2', JSON.stringify(expenses));
-            updateUI();
         }
 
         function updateUI() {
