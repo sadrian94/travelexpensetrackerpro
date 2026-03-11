@@ -201,7 +201,7 @@
     <!-- Firebase SDK Implementation -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, remove, get } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -293,11 +293,25 @@
             }
         }
 
-        window.joinTrip = function () {
+        window.joinTrip = async function () {
             const id = prompt("Enter the Trip ID you want to join (found at the end of the URL):");
             if (id && id.trim()) {
-                window.location.hash = id.trim();
-                location.reload();
+                const cleanId = id.trim();
+                setSyncing(true);
+                try {
+                    const snapshot = await get(ref(db, 'trips/' + cleanId));
+                    if (snapshot.exists()) {
+                        window.location.hash = cleanId;
+                        location.reload();
+                    } else {
+                        alert("Trip ID not found. Please check the ID and try again.");
+                        setSyncing(false);
+                    }
+                } catch (error) {
+                    console.error("Error joining trip:", error);
+                    alert("An error occurred while trying to join the trip.");
+                    setSyncing(false);
+                }
             }
         }
 
@@ -397,9 +411,13 @@
         };
 
         window.clearAll = function () {
-            if (confirm("Are you sure? This will delete all trip data for this Link.")) {
-                setSyncing(true);
-                remove(tripRef);
+            if (confirm("⚠️ Are you sure? This will delete ALL trip data (people and expenses) for this link.")) {
+                if (confirm("🛑 TRIPLE CONFIRM: This action is permanent and cannot be undone. Are you absolutely certain?")) {
+                    if (confirm("🔥 FINAL CHECK: Last chance to cancel. Delete everything now?")) {
+                        setSyncing(true);
+                        remove(tripRef);
+                    }
+                }
             }
         };
 
