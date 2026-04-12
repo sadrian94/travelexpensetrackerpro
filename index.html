@@ -4,19 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Bill Splitter Pro</title>
+    <title>Travel Expense Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f1f5f9;
+            background-color: #F8FAFC;
+            background-image:
+                radial-gradient(at 10% 20%, rgba(59, 130, 246, 0.1) 0px, transparent 60%),
+                radial-gradient(at 80% 10%, rgba(139, 92, 246, 0.1) 0px, transparent 60%),
+                radial-gradient(at 90% 80%, rgba(236, 72, 153, 0.1) 0px, transparent 60%),
+                radial-gradient(at 20% 90%, rgba(16, 185, 129, 0.1) 0px, transparent 60%);
+            min-height: 100vh;
+            color: #0f172a;
+            position: relative;
         }
 
         .glass-card {
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            border-radius: 1.25rem;
         }
 
         .category-badge {
@@ -66,76 +78,89 @@
 
     <div class="max-w-5xl mx-auto">
         <!-- Header -->
-        <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-slate-900">🌍 Travel Expense Tracker</h1>
-                <div class="flex items-center gap-3">
-                    <p class="text-slate-500">Log spending, track categories, and settle up.</p>
-                    <div id="syncStatus" class="sync-indicator text-slate-400">
-                        <div class="sync-dot"></div> <span id="syncText">Connected</span>
-                    </div>
-                    <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-mono"
-                        id="displayTripId">ID: ...</span>
-                    <div class="flex items-center gap-1 ml-2">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">Base Currency:</span>
-                        <select id="primaryCurrencySelect" onchange="changePrimaryCurrency()"
-                            class="text-xs bg-white border border-slate-200 px-1 py-0.5 rounded outline-none cursor-pointer">
-                        </select>
+        <header
+            class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 glass-card p-6 md:px-8 rounded-3xl md:rounded-full shadow-sm mt-4">
+            <div class="flex-1 w-full text-center md:text-left">
+                <h1
+                    class="text-3xl md:text-4xl font-extrabold bg-clip-text drop-shadow-sm mb-3 md:mb-1 flex justify-center md:justify-start items-center gap-3">
+                    🌍 Travel Expense Tracker
+                </h1>
+                <div
+                    class="flex flex-col sm:flex-row flex-wrap sm:items-center justify-center md:justify-start gap-x-4 gap-y-3">
+                    <p class="text-slate-600 font-medium text-sm">Log spending, track categories, and settle up.</p>
+                    <div class="flex items-center justify-center gap-3">
+                        <div id="syncStatus"
+                            class="sync-indicator text-slate-500 font-medium bg-white/60 px-3 py-1 rounded-full border border-slate-200 shadow-sm">
+                            <div class="sync-dot"></div> <span id="syncText">Connected</span>
+                        </div>
+                        <span
+                            class="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-mono font-bold shadow-sm"
+                            id="displayTripId">ID: ...</span>
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                <button onclick="copyShareLink()"
-                    class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-black font-bold text-sm flex items-center gap-2 shadow-sm">
-                    🔗 Share Trip
-                </button>
-                <button onclick="startNewTrip()"
-                    class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-sm shadow-sm transition">
-                    ✨ New Trip
-                </button>
-                <button onclick="joinTrip()"
-                    class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-sm shadow-sm transition">
-                    📂 Join Trip
-                </button>
-                <button onclick="clearAll()" class="text-xs text-red-500 hover:underline transition">Clear Trip
-                    Data</button>
+            <div class="flex flex-col items-center md:items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
+                <div class="flex flex-row flex-wrap justify-center items-center gap-3">
+                    <button onclick="copyShareLink()"
+                        class="flex-1 md:flex-none bg-gradient-to-r from-slate-800 to-slate-900 text-white px-5 py-3 rounded-xl hover:from-black hover:to-black font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                        🔗 Share
+                    </button>
+                    <button onclick="startNewTrip()"
+                        class="flex-1 md:flex-none bg-white text-slate-800 border-2 border-slate-200/80 px-5 py-2.5 rounded-xl hover:bg-slate-50 hover:border-slate-300 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 pointer bg-opacity-70 backdrop-blur-sm">
+                        ✨ New
+                    </button>
+                    <button onclick="joinTrip()"
+                        class="flex-1 md:flex-none bg-white text-slate-800 border-2 border-slate-200/80 px-5 py-2.5 rounded-xl hover:bg-slate-50 hover:border-slate-300 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 pointer bg-opacity-70 backdrop-blur-sm">
+                        📂 Join
+                    </button>
+                </div>
+                <div
+                    class="flex items-center justify-center gap-1.5 bg-white/70 px-4 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                    <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Base Cur:</span>
+                    <select id="primaryCurrencySelect" onchange="changePrimaryCurrency()"
+                        class="text-xs bg-transparent font-bold text-slate-800 outline-none cursor-pointer">
+                    </select>
+                </div>
             </div>
-            <p class="text-[10px] text-slate-400 mt-2 md:text-right italic">
-                💡 Tip: This URL is your "Key". Bookmark it or share it with friends to see the same data on any device!
-            </p>
         </header>
+
+        <p class="text-xs text-slate-500 -mt-6 mb-8 text-center md:text-right italic px-4 font-medium">
+            💡 Tip: This URL is your "Key". Bookmark it or share it with friends to auto-sync!
+        </p>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             <!-- Left Column: Setup & People (4 cols) -->
+            <!-- Left Column: Setup & People (4 cols) -->
             <div class="lg:col-span-4 space-y-6">
-                <div class="glass-card p-6 rounded-2xl shadow-sm">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <span class="text-blue-500">👥</span> Trip Group
+                <div class="glass-card p-6 shadow-sm border-t-4 border-t-blue-500">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-3 text-slate-800">
+                        <span class="text-blue-500 bg-blue-50 p-2 rounded-xl">👥</span> Trip Group
                     </h2>
-                    <div class="flex gap-2 mb-4">
+                    <div class="flex flex-col sm:flex-row gap-3 mb-5">
                         <input id="personName" type="text" placeholder="Add friend name..."
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white/60 focus:bg-white transition-all text-sm shadow-sm">
                         <button onclick="addPerson()"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold">+</button>
+                            class="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">Add</button>
                     </div>
-                    <ul id="peopleList" class="space-y-2"></ul>
+                    <ul id="peopleList" class="space-y-3"></ul>
                 </div>
 
                 <!-- Recent Trips -->
-                <div id="recentTripsContainer" class="glass-card p-6 rounded-2xl shadow-sm hidden">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <span class="text-orange-500">⏱️</span> Recent Trips
+                <div id="recentTripsContainer" class="glass-card p-6 border-t-4 border-t-orange-400 shadow-sm hidden">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-3 text-slate-800">
+                        <span class="text-orange-500 bg-orange-50 p-2 rounded-xl">⏱️</span> Recent Trips
                     </h2>
-                    <ul id="recentTripsList" class="space-y-2 text-sm text-slate-600">
+                    <ul id="recentTripsList" class="space-y-3 text-sm text-slate-600">
                         <!-- Recent trips go here -->
                     </ul>
                 </div>
 
                 <!-- Settlement Summary -->
-                <div class="glass-card p-6 rounded-2xl shadow-sm bg-blue-50 border-blue-100">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <span class="text-blue-600">📊</span> Final Balances
+                <div
+                    class="glass-card p-6 shadow-sm bg-gradient-to-br from-blue-50/80 to-indigo-50/80 border border-blue-100/50">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-3 text-slate-800">
+                        <span class="text-blue-600 bg-blue-100 p-2 rounded-xl">📊</span> Final Balances
                     </h2>
                     <div id="balanceContainer" class="space-y-3">
                         <!-- Debt instructions go here -->
@@ -147,28 +172,39 @@
             <div class="lg:col-span-8 space-y-6">
 
                 <!-- Add Expense Form -->
-                <div class="glass-card p-6 rounded-2xl shadow-sm border-t-4 border-t-green-500">
-                    <h2 class="text-lg font-bold mb-4">💸 Add New Expense</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div
+                    class="glass-card p-6 md:p-8 rounded-3xl shadow-sm border-t-4 border-t-emerald-400 relative overflow-hidden">
+                    <div
+                        class="absolute top-0 right-0 w-64 h-64 bg-emerald-400 opacity-5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
+                    </div>
+
+                    <h2 class="text-xl font-extrabold mb-6 text-slate-800 flex items-center gap-3">
+                        <span class="bg-emerald-100 p-2.5 rounded-xl text-emerald-600">💸</span> Add New Expense
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
                         <div>
-                            <label class="text-xs font-bold text-slate-500 uppercase">Description</label>
+                            <label
+                                class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Description</label>
                             <input id="expDesc" type="text" placeholder="e.g. Sushi Dinner"
-                                class="w-full px-3 py-2 border rounded-lg outline-none">
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-white/60 focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all text-sm shadow-sm">
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-slate-500 uppercase">Amount</label>
-                            <div class="flex">
+                            <label
+                                class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Amount</label>
+                            <div class="flex shadow-sm rounded-xl">
                                 <select id="expCurrency"
-                                    class="px-2 py-2 border border-r-0 rounded-l-lg outline-none bg-slate-50 text-sm font-bold w-24 cursor-pointer">
+                                    class="px-3 py-3 border border-r-0 border-slate-200 rounded-l-xl outline-none bg-slate-50/80 text-sm font-bold w-24 cursor-pointer focus:bg-white text-slate-700">
                                 </select>
                                 <input id="expAmount" type="number" placeholder="0.00"
-                                    class="w-full px-3 py-2 border rounded-r-lg outline-none">
+                                    class="w-full px-4 py-3 border border-slate-200 rounded-r-xl outline-none bg-white/60 focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all text-sm">
                             </div>
                         </div>
 
                         <div>
-                            <label class="text-xs font-bold text-slate-500 uppercase">Category</label>
-                            <select id="expCategory" class="w-full px-3 py-2 border rounded-lg outline-none bg-white">
+                            <label
+                                class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Category</label>
+                            <select id="expCategory"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-white/60 focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all text-sm cursor-pointer shadow-sm text-slate-700">
                                 <option value="Food">🍔 Food & Drink</option>
                                 <option value="Transport">🚗 Transport</option>
                                 <option value="Lodging">🏨 Lodging</option>
@@ -179,33 +215,50 @@
                         </div>
 
                         <div>
-                            <label class="text-xs font-bold text-slate-500 uppercase">Who Paid?</label>
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Who
+                                Paid?</label>
                             <select id="expPayer"
-                                class="w-full px-3 py-2 border rounded-lg outline-none bg-white"></select>
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-white/60 focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all text-sm cursor-pointer shadow-sm text-slate-700"></select>
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label class="text-xs font-bold text-slate-500 uppercase block mb-2">Split with
-                                whom?</label>
-                            <div id="splitCheckboxes" class="flex flex-wrap gap-2 p-3 border rounded-lg bg-slate-50">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Split
+                                with whom?</label>
+                            <div id="splitCheckboxes"
+                                class="flex flex-wrap gap-2 p-4 border border-slate-200 rounded-xl bg-white/40 backdrop-blur-sm min-h-[3.5rem] shadow-sm">
                                 <!-- Group members -->
                             </div>
                         </div>
                     </div>
                     <button onclick="addExpense()"
-                        class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-lg">Log
-                        Expense</button>
+                        class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3.5 rounded-xl font-bold text-[15px] hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md hover:shadow-xl transform hover:-translate-y-0.5">
+                        Log Expense
+                    </button>
                 </div>
 
                 <!-- History -->
-                <div>
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <span class="text-slate-400">📜</span> Transaction History
+                <div class="mt-10">
+                    <h2 class="text-xl font-extrabold mb-5 flex items-center gap-3 text-slate-800">
+                        <span class="bg-indigo-100 p-2.5 rounded-xl text-indigo-500">📜</span> Transaction History
                     </h2>
-                    <div id="historyList" class="space-y-3"></div>
+                    <div id="historyList" class="space-y-4"></div>
                 </div>
 
             </div>
+        </div>
+
+        <!-- Danger Zone: Clear Trip -->
+        <div class="mt-16 mb-12 text-center flex flex-col items-center">
+            <div class="w-16 h-1 bg-slate-200 rounded-full mb-8"></div>
+            <button onclick="clearAll()"
+                class="text-sm font-bold text-red-600 hover:text-red-700 bg-white/60 hover:bg-red-50 border border-red-200 px-6 py-3 rounded-full transition-all shadow-sm hover:shadow-md flex items-center gap-2 transform hover:-translate-y-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Clear All Trip Data
+            </button>
         </div>
     </div>
 
@@ -546,16 +599,18 @@
 
         function updateUI() {
             document.getElementById('peopleList').innerHTML = people.map(p => `
-                <li class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200">
-                    <span class="font-medium">${p}</span>
-                    <button onclick="removePerson('${p}')" class="text-slate-300 hover:text-red-500 transition">✕</button>
+                <li class="flex justify-between items-center bg-white/80 p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <span class="font-bold text-slate-700">${p}</span>
+                    <button onclick="removePerson('${p}')" class="text-slate-300 hover:text-red-500 bg-slate-50 hover:bg-red-50 p-1.5 rounded-lg transition-all" title="Remove Member">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    </button>
                 </li>
             `).join('');
 
             document.getElementById('expPayer').innerHTML = people.map(p => `<option value="${p}">${p}</option>`).join('');
             document.getElementById('splitCheckboxes').innerHTML = people.map(p => `
-                <label class="flex items-center gap-1 bg-white border px-2 py-1 rounded-md cursor-pointer text-sm">
-                    <input type="checkbox" value="${p}" class="split-member h-4 w-4" checked> ${p}
+                <label class="flex items-center gap-2 bg-white/80 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm text-slate-700">
+                    <input type="checkbox" value="${p}" class="split-member h-4 w-4 rounded text-emerald-500 focus:ring-emerald-500 cursor-pointer" checked> ${p}
                 </label>
             `).join('');
 
@@ -579,27 +634,29 @@
                     }
 
                     return `
-                    <div class="glass-card p-4 rounded-xl flex justify-between items-center shadow-sm">
-                        <div class="flex gap-4 items-center">
-                            <div class="h-10 w-10 min-w-[2.5rem] flex items-center justify-center bg-slate-100 rounded-full text-xl">
+                    <div class="glass-card p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group border-l-4 border-l-indigo-400">
+                        <div class="flex gap-4 items-center w-full sm:w-auto">
+                            <div class="h-12 w-12 min-w-[3rem] flex items-center justify-center bg-slate-50 border border-slate-100 rounded-2xl text-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
                                 ${categoryIcons[e.category] || '💰'}
                             </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-slate-800">${e.desc}</span>
-                                    <span class="category-badge ${categoryColors[e.category]}">${e.category}</span>
+                            <div class="flex-1">
+                                <div class="flex flex-wrap items-center gap-2 mb-1">
+                                    <span class="font-bold text-slate-800 text-[15px]">${e.desc}</span>
+                                    <span class="category-badge ${categoryColors[e.category]} shadow-sm border border-slate-100/50">${e.category}</span>
                                 </div>
-                                <div class="text-xs text-slate-400">
-                                    ${e.timestamp} • Paid by <span class="font-semibold">${e.payer}</span>
+                                <div class="text-xs text-slate-500 font-medium whitespace-nowrap">
+                                    ${e.timestamp} • Paid by <span class="font-bold text-indigo-600">${e.payer}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-right flex items-center gap-4">
+                        <div class="text-right flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-0 border-slate-100/50 pt-3 sm:pt-0">
                             <div>
-                                <div class="font-bold text-slate-900 leading-tight flex flex-col items-end">${amountHtml}</div>
-                                <div class="text-[10px] text-slate-400 uppercase font-bold italic mt-1">Split ${e.splitWith.length} ways</div>
+                                <div class="font-extrabold text-slate-900 leading-tight flex flex-col sm:items-end">${amountHtml}</div>
+                                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-1 sm:text-right">Split ${e.splitWith.length} ways</div>
                             </div>
-                            <button onclick="deleteExpense('${e.firebaseKey}')" class="text-slate-300 hover:text-red-500 transition text-lg">🗑️</button>
+                            <button onclick="deleteExpense('${e.firebaseKey}')" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all text-xl" title="Delete Expense">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
                         </div>
                     </div>
                 `}).join('');
@@ -655,10 +712,10 @@
             }
 
             container.innerHTML = instructions.length === 0
-                ? `<p class="text-slate-500 text-sm">Everyone is even! 🎉</p>`
+                ? `<p class="text-slate-500 text-sm font-bold text-center py-4 bg-white/50 rounded-xl">Everyone is settled up! 🎉</p>`
                 : instructions.map(ins => `
-                    <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm text-sm">
-                        ${ins}
+                    <div class="bg-white/90 p-3.5 rounded-xl border border-blue-100 shadow-sm text-sm flex items-center gap-2 font-medium text-slate-700">
+                        <span class="text-blue-500 bg-blue-50 p-1.5 rounded-lg border border-blue-100/50">💸</span> ${ins}
                     </div>
                 `).join('');
         }
