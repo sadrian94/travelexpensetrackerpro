@@ -271,18 +271,16 @@
         // Please replace with your own Firebase CDN configuration 
         // You can get your own Firebase configuration from the Firebase Console
         // https://console.firebase.google.com/ 
-        ```
-        const firebaseConfig = {
-            apiKey: "[GCP_API_KEY]",
-            authDomain: "",
-            databaseURL: "",
-            projectId: "",
-            storageBucket: "",
-            messagingSenderId: "",
-            appId: "",
-            measurementId: ""
-        };
-        ```
+        // const firebaseConfig = {
+        //    apiKey: "[GCP_API_KEY]",
+        //    authDomain: "",
+        //    databaseURL: "",
+        //    projectId: "",
+        //    storageBucket: "",
+        //    messagingSenderId: "",
+        //    appId: "",
+        //    measurementId: ""
+        // };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -321,8 +319,42 @@
 
         function populateCurrencyDropdowns() {
             const options = Object.keys(SUPPORTED_CURRENCIES).map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('primaryCurrencySelect').innerHTML = options;
-            document.getElementById('expCurrency').innerHTML = options;
+            const pSel = document.getElementById('primaryCurrencySelect');
+            const eSel = document.getElementById('expCurrency');
+            
+            if(pSel) pSel.innerHTML = options;
+            if(eSel) eSel.innerHTML = options;
+
+            const expand = () => {
+                [pSel, eSel].forEach(sel => {
+                    if(!sel) return;
+                    Array.from(sel.options).forEach(opt => {
+                        const val = opt.value;
+                        if(SUPPORTED_CURRENCIES[val]) {
+                            opt.text = `${val} - ${SUPPORTED_CURRENCIES[val].symbol} ${SUPPORTED_CURRENCIES[val].name}`;
+                        }
+                    });
+                });
+            };
+
+            const collapse = () => {
+                [pSel, eSel].forEach(sel => {
+                    if(!sel) return;
+                    Array.from(sel.options).forEach(opt => {
+                        opt.text = opt.value;
+                    });
+                });
+            };
+
+            [pSel, eSel].forEach(sel => {
+                if(!sel) return;
+                sel.addEventListener('mousedown', expand);
+                sel.addEventListener('touchstart', expand, {passive: true});
+                sel.addEventListener('focus', expand);
+                
+                sel.addEventListener('change', collapse);
+                sel.addEventListener('blur', collapse);
+            });
         }
 
         async function fetchExchangeRates() {
@@ -639,30 +671,28 @@
                     }
 
                     return `
-                    <div class="glass-card p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group border-l-4 border-l-indigo-400">
-                        <div class="flex gap-4 items-center w-full sm:w-auto">
-                            <div class="h-12 w-12 min-w-[3rem] flex items-center justify-center bg-slate-50 border border-slate-100 rounded-2xl text-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl flex justify-between items-center gap-2 sm:gap-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group border-l-4 border-l-indigo-400">
+                        <div class="flex gap-3 sm:gap-4 items-center flex-1 min-w-0">
+                            <div class="h-10 w-10 sm:h-12 sm:w-12 min-w-[2.5rem] sm:min-w-[3rem] flex items-center justify-center bg-slate-50 border border-slate-100 rounded-xl text-xl sm:text-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
                                 ${categoryIcons[e.category] || '💰'}
                             </div>
-                            <div class="flex-1">
-                                <div class="flex flex-wrap items-center gap-2 mb-1">
-                                    <span class="font-bold text-slate-800 text-[15px]">${e.desc}</span>
-                                    <span class="category-badge ${categoryColors[e.category]} shadow-sm border border-slate-100/50">${e.category}</span>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                                    <span class="font-bold text-slate-800 text-[13px] sm:text-[15px] truncate max-w-[140px] xs:max-w-none">${e.desc}</span>
+                                    <span class="category-badge ${categoryColors[e.category]} shadow-sm border border-slate-100/50 text-[9px] sm:text-[10px]">${e.category}</span>
                                 </div>
-                                <div class="text-xs text-slate-500 font-medium whitespace-nowrap">
-                                    ${e.timestamp} • Paid by <span class="font-bold text-indigo-600">${e.payer}</span>
+                                <div class="text-[10px] sm:text-xs text-slate-500 font-medium truncate">
+                                    ${e.timestamp} • By <span class="font-bold text-indigo-600">${e.payer}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-right flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-0 border-slate-100/50 pt-3 sm:pt-0">
-                            <div>
-                                <div class="font-extrabold text-slate-900 leading-tight flex flex-col sm:items-end">${amountHtml}</div>
-                                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-1 sm:text-right">Split ${e.splitWith.length} ways</div>
-                            </div>
-                            <button onclick="deleteExpense('${e.firebaseKey}')" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all text-xl" title="Delete Expense">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
+                        <div class="text-right flex flex-col items-end gap-0.5 ml-2">
+                            <div class="font-extrabold text-slate-900 leading-tight flex flex-col items-end text-xs sm:text-base">${amountHtml}</div>
+                            <div class="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-0.5 sm:mt-1">${e.splitWith.length} ways</div>
                         </div>
+                        <button onclick="deleteExpense('${e.firebaseKey}')" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 sm:p-2 rounded-xl transition-all text-lg sm:text-xl ml-1 sm:ml-2" title="Delete Expense">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
                     </div>
                 `}).join('');
             }
