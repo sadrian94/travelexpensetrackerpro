@@ -58,6 +58,14 @@
             background-color: #3b82f6;
         }
 
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
         @keyframes pulse {
             0% {
                 opacity: 1;
@@ -676,10 +684,10 @@
                             <div class="h-10 w-10 sm:h-12 sm:w-12 min-w-[2.5rem] sm:min-w-[3rem] flex items-center justify-center bg-slate-50 border border-slate-100 rounded-xl text-xl sm:text-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
                                 ${categoryIcons[e.category] || '💰'}
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
-                                    <span class="font-bold text-slate-800 text-[13px] sm:text-[15px] truncate max-w-[140px] xs:max-w-none">${e.desc}</span>
-                                    <span class="category-badge ${categoryColors[e.category]} shadow-sm border border-slate-100/50 text-[9px] sm:text-[10px]">${e.category}</span>
+                            <div class="flex-1 min-w-0 flex flex-col justify-center overflow-hidden">
+                                <div class="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 overflow-x-auto whitespace-nowrap hide-scrollbar max-w-full pr-2">
+                                    <span class="font-bold text-slate-800 text-[13px] sm:text-[15px] shrink-0">${e.desc}</span>
+                                    <span class="category-badge ${categoryColors[e.category]} shadow-sm border border-slate-100/50 text-[9px] sm:text-[10px] shrink-0">${e.category}</span>
                                 </div>
                                 <div class="text-[10px] sm:text-xs text-slate-500 font-medium truncate">
                                     ${e.timestamp} • By <span class="font-bold text-indigo-600">${e.payer}</span>
