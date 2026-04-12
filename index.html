@@ -267,17 +267,22 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove, get } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
-        // Firebase configuration
+        // Firebase configuration 
+        // Please replace with your own Firebase CDN configuration 
+        // You can get your own Firebase configuration from the Firebase Console
+        // https://console.firebase.google.com/ 
+        ```
         const firebaseConfig = {
-            apiKey: "AIzaSyD-aGIZFJEcZva-t0xcmAtp63v_EJFp7fA",
-            authDomain: "travelexpensetrackerdatabase.firebaseapp.com",
-            databaseURL: "https://travelexpensetrackerdatabase-default-rtdb.firebaseio.com",
-            projectId: "travelexpensetrackerdatabase",
-            storageBucket: "travelexpensetrackerdatabase.firebasestorage.app",
-            messagingSenderId: "223838111482",
-            appId: "1:223838111482:web:ff93cab2096be9ea64ab43",
-            measurementId: "G-7RMJZSL29D"
+            apiKey: "[GCP_API_KEY]",
+            authDomain: "",
+            databaseURL: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: "",
+            measurementId: ""
         };
+        ```
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
