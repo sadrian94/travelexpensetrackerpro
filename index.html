@@ -76,6 +76,12 @@
                     </div>
                     <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-mono"
                         id="displayTripId">ID: ...</span>
+                    <div class="flex items-center gap-1 ml-2">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Base Currency:</span>
+                        <select id="primaryCurrencySelect" onchange="changePrimaryCurrency()"
+                            class="text-xs bg-white border border-slate-200 px-1 py-0.5 rounded outline-none cursor-pointer">
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="flex items-center gap-4">
@@ -150,9 +156,14 @@
                                 class="w-full px-3 py-2 border rounded-lg outline-none">
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-slate-500 uppercase">Amount ($)</label>
-                            <input id="expAmount" type="number" placeholder="0.00"
-                                class="w-full px-3 py-2 border rounded-lg outline-none">
+                            <label class="text-xs font-bold text-slate-500 uppercase">Amount</label>
+                            <div class="flex">
+                                <select id="expCurrency"
+                                    class="px-2 py-2 border border-r-0 rounded-l-lg outline-none bg-slate-50 text-sm font-bold w-24 cursor-pointer">
+                                </select>
+                                <input id="expAmount" type="number" placeholder="0.00"
+                                    class="w-full px-3 py-2 border rounded-r-lg outline-none">
+                            </div>
                         </div>
 
                         <div>
@@ -223,6 +234,62 @@
         let people = [];
         let expenses = [];
         let tripId = window.location.hash.substring(1);
+
+        const SUPPORTED_CURRENCIES = {
+            'USD': { symbol: '$', name: 'US Dollar' },
+            'EUR': { symbol: '€', name: 'Euro' },
+            'GBP': { symbol: '£', name: 'British Pound' },
+            'JPY': { symbol: '¥', name: 'Japanese Yen' },
+            'CAD': { symbol: 'CA$', name: 'Canadian Dollar' },
+            'AUD': { symbol: 'A$', name: 'Australian Dollar' },
+            'CNY': { symbol: 'CN¥', name: 'Chinese Yuan' },
+            'INR': { symbol: '₹', name: 'Indian Rupee' },
+            'HKD': { symbol: 'HK$', name: 'Hong Kong Dollar' },
+            'SGD': { symbol: 'S$', name: 'Singapore Dollar' },
+            'CHF': { symbol: 'CHF', name: 'Swiss Franc' },
+            'KRW': { symbol: '₩', name: 'South Korean Won' },
+            'MXN': { symbol: 'Mex$', name: 'Mexican Peso' },
+            'BRL': { symbol: 'R$', name: 'Brazilian Real' },
+            'ZAR': { symbol: 'R', name: 'South African Rand' },
+            'NZD': { symbol: 'NZ$', name: 'New Zealand Dollar' },
+            'SEK': { symbol: 'kr', name: 'Swedish Krona' },
+            'NOK': { symbol: 'kr', name: 'Norwegian Krone' },
+            'ILS': { symbol: '₪', name: 'Israeli New Shekel' },
+            'TRY': { symbol: '₺', name: 'Turkish Lira' }
+        };
+
+        let primaryCurrency = 'USD';
+        let exchangeRates = {};
+
+        function populateCurrencyDropdowns() {
+            const options = Object.keys(SUPPORTED_CURRENCIES).map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('primaryCurrencySelect').innerHTML = options;
+            document.getElementById('expCurrency').innerHTML = options;
+        }
+
+        async function fetchExchangeRates() {
+            const dateKey = new Date().toISOString().split('T')[0];
+            const cacheKey = `exchangeRates_${dateKey}`;
+            const cached = localStorage.getItem(cacheKey);
+
+            if (cached) {
+                exchangeRates = JSON.parse(cached);
+                updateUI(); // In case UI rendered before we got this
+                return;
+            }
+
+            try {
+                const response = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await response.json();
+                if (data && data.rates) {
+                    exchangeRates = data.rates;
+                    localStorage.setItem(cacheKey, JSON.stringify(exchangeRates));
+                    updateUI(); // In case UI rendered before we got this
+                }
+            } catch (e) {
+                console.error("Failed to fetch exchange rates", e);
+            }
+        }
 
         // --- Trip Persistence & Recovery ---
         function initTrip() {
@@ -316,6 +383,8 @@
         }
 
         initTrip();
+        populateCurrencyDropdowns();
+        fetchExchangeRates();
 
         const tripRef = ref(db, 'trips/' + tripId);
 
@@ -332,10 +401,24 @@
             }
         };
 
+        window.changePrimaryCurrency = function () {
+            const sel = document.getElementById('primaryCurrencySelect').value;
+            setSyncing(true);
+            set(ref(db, 'trips/' + tripId + '/primaryCurrency'), sel);
+        };
+
         // --- Real-time Sync ---
         onValue(tripRef, (snapshot) => {
             const data = snapshot.val() || {};
             people = data.people || [];
+            primaryCurrency = data.primaryCurrency || 'USD';
+
+            // Sync dropdown with current state without triggering onchange recursively
+            const primarySelect = document.getElementById('primaryCurrencySelect');
+            if (primarySelect.value !== primaryCurrency) {
+                primarySelect.value = primaryCurrency;
+                document.getElementById('expCurrency').value = primaryCurrency;
+            }
 
             const rawExpenses = data.expenses || {};
             expenses = Object.keys(rawExpenses).map(key => ({
@@ -377,14 +460,27 @@
         window.addExpense = function () {
             const desc = document.getElementById('expDesc').value;
             const amount = parseFloat(document.getElementById('expAmount').value);
+            const currency = document.getElementById('expCurrency').value;
             const category = document.getElementById('expCategory').value;
             const payer = document.getElementById('expPayer').value;
 
             const selectedPeople = Array.from(document.querySelectorAll('.split-member:checked'))
                 .map(cb => cb.value);
 
-            if (!desc || isNaN(amount) || !payer || selectedPeople.length === 0) {
-                alert("Please complete all fields.");
+            if (!desc) {
+                alert("Please enter a description.");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid positive amount.");
+                return;
+            }
+            if (!payer) {
+                alert("Please select who paid (add a person to the group first).");
+                return;
+            }
+            if (selectedPeople.length === 0) {
+                alert("Please select at least one person to split with.");
                 return;
             }
 
@@ -394,6 +490,7 @@
                 timestamp: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 desc,
                 amount,
+                currency: currency || primaryCurrency,
                 category,
                 payer,
                 splitWith: selectedPeople
@@ -442,6 +539,11 @@
             'Food': '🍔', 'Transport': '🚗', 'Lodging': '🏨', 'Activities': '🎡', 'Shopping': '🛍️', 'Other': '📦'
         };
 
+        function formatCurrency(amount, currencyCode) {
+            const sym = SUPPORTED_CURRENCIES[currencyCode] ? SUPPORTED_CURRENCIES[currencyCode].symbol : currencyCode;
+            return `${sym}${amount.toFixed(2)}`;
+        }
+
         function updateUI() {
             document.getElementById('peopleList').innerHTML = people.map(p => `
                 <li class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200">
@@ -461,10 +563,25 @@
             if (expenses.length === 0) {
                 hList.innerHTML = `<div class="text-center p-8 border-2 border-dashed rounded-2xl text-slate-400">No expenses yet</div>`;
             } else {
-                hList.innerHTML = expenses.slice().sort((a, b) => b.id - a.id).map(e => `
+                hList.innerHTML = expenses.slice().sort((a, b) => b.id - a.id).map(e => {
+                    let eCurrency = e.currency || 'USD';
+                    let amountHtml = '';
+
+                    // If it was entered in a secondary currency, display the Base Currency prominently and append the original.
+                    if (eCurrency !== primaryCurrency && exchangeRates[primaryCurrency] && exchangeRates[eCurrency]) {
+                        let converted = e.amount * (exchangeRates[primaryCurrency] / exchangeRates[eCurrency]);
+                        amountHtml += `${formatCurrency(converted, primaryCurrency)}`;
+                        amountHtml += ` <span class="text-xs text-slate-400 font-normal opacity-80 block">(Paid: ${formatCurrency(e.amount, eCurrency)})</span>`;
+                    } else if (eCurrency !== primaryCurrency && Object.keys(exchangeRates).length === 0) {
+                        amountHtml += `${formatCurrency(e.amount, eCurrency)} <span class="text-xs text-slate-400 font-normal opacity-80 block">(Loading conversion...)</span>`;
+                    } else {
+                        amountHtml += `${formatCurrency(e.amount, eCurrency)}`;
+                    }
+
+                    return `
                     <div class="glass-card p-4 rounded-xl flex justify-between items-center shadow-sm">
                         <div class="flex gap-4 items-center">
-                            <div class="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full text-xl">
+                            <div class="h-10 w-10 min-w-[2.5rem] flex items-center justify-center bg-slate-100 rounded-full text-xl">
                                 ${categoryIcons[e.category] || '💰'}
                             </div>
                             <div>
@@ -479,13 +596,13 @@
                         </div>
                         <div class="text-right flex items-center gap-4">
                             <div>
-                                <div class="font-bold text-slate-900">$${e.amount.toFixed(2)}</div>
-                                <div class="text-[10px] text-slate-400 uppercase font-bold italic">Split ${e.splitWith.length} ways</div>
+                                <div class="font-bold text-slate-900 leading-tight flex flex-col items-end">${amountHtml}</div>
+                                <div class="text-[10px] text-slate-400 uppercase font-bold italic mt-1">Split ${e.splitWith.length} ways</div>
                             </div>
                             <button onclick="deleteExpense('${e.firebaseKey}')" class="text-slate-300 hover:text-red-500 transition text-lg">🗑️</button>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             }
 
             calculateBalances();
@@ -502,8 +619,16 @@
             people.forEach(p => balances[p] = 0);
 
             expenses.forEach(exp => {
-                balances[exp.payer] += exp.amount;
-                const share = exp.amount / exp.splitWith.length;
+                let eCurrency = exp.currency || 'USD';
+                let expValue = exp.amount;
+
+                // Convert to primary currency
+                if (eCurrency !== primaryCurrency && exchangeRates[primaryCurrency] && exchangeRates[eCurrency]) {
+                    expValue = exp.amount * (exchangeRates[primaryCurrency] / exchangeRates[eCurrency]);
+                }
+
+                balances[exp.payer] += expValue;
+                const share = expValue / exp.splitWith.length;
                 exp.splitWith.forEach(p => {
                     balances[p] -= share;
                 });
@@ -518,10 +643,12 @@
 
             let instructions = [];
             let dIdx = 0, cIdx = 0;
+            const primarySym = SUPPORTED_CURRENCIES[primaryCurrency] ? SUPPORTED_CURRENCIES[primaryCurrency].symbol : primaryCurrency;
+
             while (dIdx < debtors.length && cIdx < creditors.length) {
                 let d = debtors[dIdx], c = creditors[cIdx];
                 let settle = Math.min(d.amt, c.amt);
-                instructions.push(`<strong>${d.name}</strong> owes <strong>${c.name}</strong> <span class="text-blue-600 font-bold">$${settle.toFixed(2)}</span>`);
+                instructions.push(`<strong>${d.name}</strong> owes <strong>${c.name}</strong> <span class="text-blue-600 font-bold">${primarySym}${settle.toFixed(2)}</span>`);
                 d.amt -= settle; c.amt -= settle;
                 if (d.amt <= 0.01) dIdx++;
                 if (c.amt <= 0.01) cIdx++;
