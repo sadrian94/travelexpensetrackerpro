@@ -2,6 +2,8 @@
 
 A premium, real-time, multi-currency travel expense tracking application built for groups. Log spending, track categories, and settle up with friends instantly.
 
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20Now-ff0055?style=for-the-badge&logo=netlify)](https://travelexpensetrackerpro.netlify.app/)
+
 ![Premium UI Design](https://img.shields.io/badge/UI-Modern%20Glassmorphism-blueviolet)
 ![Real-time](https://img.shields.io/badge/Sync-Firebase%20Real--time-orange)
 ![Currency](https://img.shields.io/badge/Features-Multi--Currency-emerald)
