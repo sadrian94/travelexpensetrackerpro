@@ -36,7 +36,7 @@ To run this project locally with real-time syncing, you'll need a Firebase proje
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/travelexpensetrackerpro.git
+   git clone https://github.com/sadrian94/travelexpensetrackerpro.git
    cd travelexpensetrackerpro
    ```
 
