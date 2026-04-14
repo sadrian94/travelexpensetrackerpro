@@ -690,14 +690,16 @@
                                     <span class="font-bold text-slate-800 text-[13px] sm:text-[15px] line-clamp-2 break-words align-middle inline mr-1.5">${e.desc}</span>
                                     <span class="category-badge ${categoryColors[e.category]} shadow-sm border border-slate-100/50 text-[9px] sm:text-[10px] whitespace-nowrap align-middle inline-block mt-0.5">${e.category}</span>
                                 </div>
-                                <div class="text-[10px] sm:text-xs text-slate-500 font-medium truncate mt-0.5">
+                                <div class="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">
                                     ${e.timestamp} • By <span class="font-bold text-indigo-600">${e.payer}</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1 mt-1.5">
+                                    ${e.splitWith.map(name => `<span class="text-[9px] sm:text-[10px] bg-slate-100 text-slate-500 font-semibold px-1.5 py-0.5 rounded-full border border-slate-200/80 whitespace-nowrap">${name}</span>`).join('')}
                                 </div>
                             </div>
                         </div>
                         <div class="text-right flex flex-col items-end gap-0.5 ml-2">
                             <div class="font-extrabold text-slate-900 leading-tight flex flex-col items-end text-xs sm:text-base">${amountHtml}</div>
-                            <div class="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-0.5 sm:mt-1">${e.splitWith.length} ways</div>
                         </div>
                         <button onclick="deleteExpense('${e.firebaseKey}')" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 sm:p-2 rounded-xl transition-all text-lg sm:text-xl ml-1 sm:ml-2" title="Delete Expense">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
